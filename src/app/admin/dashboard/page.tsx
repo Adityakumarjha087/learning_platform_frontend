@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend-sa8z.onrender.com/';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend-sa8z.onrender.com';
 
 interface Course {
   id: string;

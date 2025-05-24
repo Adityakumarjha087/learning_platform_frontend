@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import axios from 'axios';
 
 // Ensure the API_URL in AuthContext uses the updated environment variable, defaulting to port 5000
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend-sa8z.onrender.com/';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend-sa8z.onrender.com';
 
 // Add axios interceptor for token handling
 axios.interceptors.request.use(
