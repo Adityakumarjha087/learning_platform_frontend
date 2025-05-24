@@ -9,9 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend-sa8z.onrender.com';
 
 interface Course {
-  id: string;
+  _id: string;
   title: string;
   description: string;
+  price: number;
   enrolledStudents?: number;
   isEnrolled?: boolean;
 }
@@ -21,6 +22,8 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [showEnrollmentSuccess, setShowEnrollmentSuccess] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -35,20 +38,59 @@ export default function CoursesPage() {
     }
   };
 
-  const handleEnroll = async (courseId: string) => {
+  const handleJoinCourse = async (course: Course) => {
+    setSelectedCourse(course);
+    setShowPaymentModal(true);
+  };
+
+  const handlePayment = async () => {
+    if (!selectedCourse) return;
+    
     try {
-      await axios.post(`${API_URL}/api/courses/${courseId}/enroll`);
-      setSelectedCourse(courses.find(c => c.id === courseId) || null);
-      setShowEnrollmentSuccess(true);
-      fetchCourses();
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setShowEnrollmentSuccess(false);
-        setSelectedCourse(null);
-      }, 3000);
+      setLoading(true);
+      // Initialize Razorpay
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: selectedCourse.price * 100, // amount in smallest currency unit
+        currency: "INR",
+        name: "Learning Platform",
+        description: `Payment for ${selectedCourse.title}`,
+        handler: async function (response: any) {
+          try {
+            // Verify payment on backend
+            await axios.post(`${API_URL}/api/courses/${selectedCourse._id}/enroll`, {
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              signature: response.razorpay_signature
+            });
+            
+            setShowPaymentModal(false);
+            setShowEnrollmentSuccess(true);
+            fetchCourses();
+            
+            setTimeout(() => {
+              setShowEnrollmentSuccess(false);
+              setSelectedCourse(null);
+            }, 3000);
+          } catch (error) {
+            console.error('Error verifying payment:', error);
+          }
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+        },
+        theme: {
+          color: "#6366f1",
+        },
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.open();
     } catch (error) {
-      console.error('Error enrolling in course:', error);
+      console.error('Error initiating payment:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,26 +139,69 @@ export default function CoursesPage() {
           )}
         </AnimatePresence>
 
+        {/* Payment Modal */}
+        <AnimatePresence>
+          {showPaymentModal && selectedCourse && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            >
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg max-w-md text-center">
+                <h2 className="text-2xl font-bold mb-4">Confirm Enrollment</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Do you want to join {selectedCourse.title}?
+                </p>
+                <p className="text-xl font-semibold mb-6">
+                  Price: ₹{selectedCourse.price}
+                </p>
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="btn-secondary"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePayment}
+                    className="btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? 'Processing...' : 'Proceed to Payment'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
-            <div key={course.id} className="card">
+            <div key={course._id} className="card hover:shadow-xl transition-shadow duration-300">
               <h3 className="text-xl font-semibold mb-2">{course.title}</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {course.description}
               </p>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">
-                  {course.enrolledStudents ?? 0} students enrolled
-                </span>
+                <div>
+                  <span className="text-sm text-gray-500 block">
+                    {course.enrolledStudents ?? 0} students enrolled
+                  </span>
+                  <span className="text-lg font-semibold text-primary-600">
+                    ₹{course.price}
+                  </span>
+                </div>
                 <button
-                  onClick={() => handleEnroll(course.id)}
+                  onClick={() => handleJoinCourse(course)}
                   disabled={course.isEnrolled}
                   className={`btn-primary ${
                     course.isEnrolled ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
-                  {course.isEnrolled ? 'Enrolled' : 'Enroll Now'}
+                  {course.isEnrolled ? 'Enrolled' : 'Join Course'}
                 </button>
               </div>
             </div>

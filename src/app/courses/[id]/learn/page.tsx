@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, Typography, Space, Button, Form, Radio, Input, message } from 'antd';
 import axios from 'axios';
 import AudioRecorder from '@/components/AudioRecorder';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -143,80 +144,101 @@ const LearningInterface: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Title level={2}>{currentChapter.title}</Title>
-      <Text>{currentChapter.content}</Text>
-      <Form form={form} layout="vertical" style={{ marginTop: '24px' }}>
-        {currentChapter.questions.map((question, index) => (
-          <Card key={question._id} style={{ marginBottom: '16px' }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Text strong>Question {index + 1}: {question.question}</Text>
-              {question.media && (
-                <div>
-                  {question.media.type === 'image' ? (
-                    <img src={question.media.url} alt="Question media" style={{ maxWidth: '100%' }} />
-                  ) : (
-                    <audio controls src={question.media.url} />
-                  )}
-                </div>
-              )}
-              {question.type === 'multiple-choice' && (
-                <Form.Item
-                  name={question._id}
-                  rules={[{ required: true, message: 'Please select an answer' }]}
-                >
-                  <Radio.Group>
-                    <Space direction="vertical">
-                      {question.options?.map((option, optionIndex) => (
-                        <Radio key={optionIndex} value={option}>
-                          {option}
-                        </Radio>
-                      ))}
-                    </Space>
-                  </Radio.Group>
-                </Form.Item>
-              )}
-              {question.type === 'fill-blank' && (
-                <Form.Item
-                  name={question._id}
-                  rules={[{ required: true, message: 'Please fill in the blank' }]}
-                >
-                  <Input placeholder="Enter your answer" />
-                </Form.Item>
-              )}
-              {question.type === 'text' && (
-                <Form.Item
-                  name={question._id}
-                  rules={[{ required: true, message: 'Please enter your answer' }]}
-                >
-                  <Input.TextArea rows={4} placeholder="Enter your answer" />
-                </Form.Item>
-              )}
-              {question.type === 'audio' && (
-                <Form.Item
-                  name={question._id}
-                  rules={[{ required: true, message: 'Please record your answer' }]}
-                >
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-100 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-6 px-2 sm:px-4 md:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-center mb-8 gap-2 sm:gap-4">
+          <Button
+            type="link"
+            icon={<ArrowLeftOutlined />}
+            className="text-blue-600 dark:text-blue-300 font-semibold w-full sm:w-auto"
+            onClick={() => router.push('/dashboard')}
+          >
+            Back to Dashboard
+          </Button>
+          <Title level={2} className="sm:ml-4 mb-0 text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow text-center sm:text-left">
+            {currentChapter.title}
+          </Title>
+        </div>
+        <Card className="rounded-2xl shadow-xl bg-white/90 dark:bg-gray-900/80 border-0 mb-8">
+          <Text className="text-base sm:text-lg text-gray-700 dark:text-gray-300">{currentChapter.content}</Text>
+        </Card>
+        <Form form={form} layout="vertical" style={{ marginTop: '24px' }} className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-xl shadow-lg">
+          {currentChapter.questions.map((question, index) => (
+            <Card key={question._id} className="mb-6 rounded-xl shadow bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-900 border-0">
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong className="text-base sm:text-lg text-blue-700 dark:text-blue-300">Question {index + 1}: {question.question}</Text>
+                {question.media && (
                   <div>
-                    <AudioRecorder
-                      onRecordingComplete={(audioBlob) => handleAudioRecording(question._id, audioBlob)}
-                    />
-                    {form.getFieldValue(question._id) && (
-                      <div style={{ marginTop: '16px' }}>
-                        <Text>Your recording:</Text>
-                        <audio controls src={form.getFieldValue(question._id)} />
-                      </div>
+                    {question.media.type === 'image' ? (
+                      <img src={question.media.url} alt="Question media" style={{ maxWidth: '100%' }} className="rounded-lg border" />
+                    ) : (
+                      <audio controls src={question.media.url} />
                     )}
                   </div>
-                </Form.Item>
-              )}
-            </Space>
-          </Card>
-        ))}
-        <Button type="primary" onClick={handleAnswerSubmit}>
-          Submit Answers
-        </Button>
-      </Form>
+                )}
+                {question.type === 'multiple-choice' && (
+                  <Form.Item
+                    name={question._id}
+                    rules={[{ required: true, message: 'Please select an answer' }]}
+                  >
+                    <Radio.Group className="flex flex-col gap-2">
+                      <Space direction="vertical">
+                        {question.options?.map((option, optionIndex) => (
+                          <Radio key={optionIndex} value={option} className="rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 border-0 w-full sm:w-auto">
+                            {option}
+                          </Radio>
+                        ))}
+                      </Space>
+                    </Radio.Group>
+                  </Form.Item>
+                )}
+                {question.type === 'fill-blank' && (
+                  <Form.Item
+                    name={question._id}
+                    rules={[{ required: true, message: 'Please fill in the blank' }]}
+                  >
+                    <Input placeholder="Enter your answer" className="rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 border-0 w-full" />
+                  </Form.Item>
+                )}
+                {question.type === 'text' && (
+                  <Form.Item
+                    name={question._id}
+                    rules={[{ required: true, message: 'Please enter your answer' }]}
+                  >
+                    <Input.TextArea rows={4} placeholder="Enter your answer" className="rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 border-0 w-full" />
+                  </Form.Item>
+                )}
+                {question.type === 'audio' && (
+                  <Form.Item
+                    name={question._id}
+                    rules={[{ required: true, message: 'Please record your answer' }]}
+                  >
+                    <div>
+                      <AudioRecorder
+                        onRecordingComplete={(audioBlob) => handleAudioRecording(question._id, audioBlob)}
+                      />
+                      {form.getFieldValue(question._id) && (
+                        <div style={{ marginTop: '16px' }}>
+                          <Text>Your recording:</Text>
+                          <audio controls src={form.getFieldValue(question._id)} />
+                        </div>
+                      )}
+                    </div>
+                  </Form.Item>
+                )}
+              </Space>
+            </Card>
+          ))}
+          <Button
+            type="primary"
+            htmlType="submit"
+            className="w-full py-3 mt-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 border-0 font-semibold shadow hover:from-blue-600 hover:to-purple-600 transition text-base sm:text-lg"
+            onClick={handleAnswerSubmit}
+          >
+            Submit Answers
+          </Button>
+        </Form>
+      </div>
     </div>
   );
 };

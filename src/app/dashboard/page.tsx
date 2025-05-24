@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, Progress, Typography, Space, Button, List, Tag, Row, Col, Spin } from 'antd';
+import { Card, Progress, Typography, Space, Button, List, Tag, Row, Col, Spin, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import axios from 'axios';
+import { ArrowRightOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -44,6 +45,8 @@ interface Course {
   title: string;
   description: string;
   sections: Section[];
+  price: number;
+  enrolledStudents?: number;
 }
 
 interface UserProgress {
@@ -57,27 +60,42 @@ interface UserProgress {
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
-  const [progress, setProgress] = useState<Record<string, UserProgress>>({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [coursesRes, progressRes] = await Promise.all([
-          axios.get(`${API_URL}/api/courses/enrolled`),
-          axios.get(`${API_URL}/api/progress`),
-        ]);
-        setEnrolledCourses((coursesRes.data as { data: Course[] }).data);
-        setProgress((progressRes.data as { data: Record<string, UserProgress> }).data);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchCourses();
   }, []);
+
+  const fetchCourses = async () => {
+    try {
+      // Fetch all courses
+      const allCoursesRes = await axios.get(`${API_URL}/api/courses`);
+      setAllCourses(allCoursesRes.data.data);
+
+      // Fetch enrolled courses for the current user
+      const enrolledRes = await axios.get(`${API_URL}/api/courses/enrolled`);
+      setEnrolledCourseIds(enrolledRes.data.data.map((c: Course) => c._id));
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnroll = async (courseId: string) => {
+    try {
+      await axios.post(`${API_URL}/api/courses/${courseId}/enroll`);
+      message.success('Enrolled successfully!');
+      // Refetch enrolled courses to update UI
+      const enrolledRes = await axios.get(`${API_URL}/api/courses/enrolled`);
+      setEnrolledCourseIds(enrolledRes.data.data.map((c: Course) => c._id));
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Error enrolling in course');
+      console.error('Error enrolling:', error);
+    }
+  };
 
   const getChapterProgress = (courseId: string, chapterId: string) => {
     const courseProgress = progress[courseId];
@@ -123,7 +141,7 @@ const Dashboard: React.FC = () => {
     const courseProgress = progress[courseId];
     if (!courseProgress) return 0;
 
-    const course = enrolledCourses.find(c => c._id === courseId);
+    const course = allCourses.find(c => c._id === courseId);
     if (!course) return 0;
 
     let totalChapters = 0;
@@ -158,22 +176,22 @@ const Dashboard: React.FC = () => {
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'learner']}>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <nav className="glass-card sticky top-0 z-50 backdrop-blur-lg">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-100 to-pink-50 dark:from-gray-900 dark:to-gray-800">
+        <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-16 py-4 md:py-0">
+              <div className="flex items-center mb-4 md:mb-0">
+                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                   Learning Platform
                 </h1>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-300">
+              <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                <span className="text-gray-700 dark:text-gray-300 font-medium">
                   Welcome, {user?.name}
                 </span>
                 {user?.role === 'admin' && (
                   <button
-                    className="btn-primary"
+                    className="w-full md:w-auto px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow hover:from-blue-600 hover:to-purple-600 transition"
                     onClick={() => router.push('/admin/dashboard')}
                   >
                     Switch to Admin Dashboard
@@ -181,7 +199,7 @@ const Dashboard: React.FC = () => {
                 )}
                 <button
                   onClick={handleLogout}
-                  className="btn-primary"
+                  className="w-full md:w-auto px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold shadow hover:from-pink-600 hover:to-purple-600 transition"
                 >
                   Logout
                 </button>
@@ -190,68 +208,47 @@ const Dashboard: React.FC = () => {
           </div>
         </nav>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-white">User Dashboard</h1>
-          </div>
-          <div style={{ padding: '24px' }}>
-            <Title level={2}>My Learning Dashboard</Title>
-
-            {enrolledCourses && enrolledCourses.length > 0 ? (
-              <Row gutter={[16, 16]}>
-                {enrolledCourses.map((course) => {
-                  const currentChapter = findCurrentChapter(course, course._id);
-                  const courseProgress = progress[course._id];
-                  const progressPercentage = calculateProgress(course._id);
-
-                  return (
-                    <Col xs={24} sm={12} md={8} key={course._id}>
-                      <Card
-                        title={course.title}
-                        extra={
-                          <Button
-                            type="primary"
-                            onClick={() => router.push(`/courses/${course._id}/learn`)}
-                          >
-                            Continue Learning
-                          </Button>
-                        }
+        <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-8 sm:mb-10 text-center drop-shadow">All Courses</h1>
+          <Row gutter={[16, 24]} justify="center">
+            {allCourses.map((course) => (
+              <Col xs={24} sm={24} md={12} lg={8} key={course._id} className="mb-6">
+                <Card
+                  className="rounded-2xl shadow-xl hover:shadow-2xl transition-all border-0 bg-white/90 dark:bg-gray-900/80 h-full flex flex-col justify-between"
+                  title={<span className="font-semibold text-lg text-blue-700 dark:text-blue-300 truncate block">{course.title}</span>}
+                  extra={
+                    enrolledCourseIds.includes(course._id) ? (
+                      <Button
+                        type="primary"
+                        icon={<ArrowRightOutlined />}
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-blue-600 hover:to-purple-600 transition"
+                        onClick={() => router.push(`/courses/${course._id}/learn`)}
                       >
-                        <div style={{ marginBottom: '16px' }}>
-                          <Text>Progress</Text>
-                          <Progress percent={Math.round(progressPercentage)} />
-                        </div>
-
-                        {currentChapter && (
-                          <div>
-                            <Text strong>Current Chapter:</Text>
-                            <Text> {currentChapter.title}</Text>
-                          </div>
-                        )}
-
-                        {courseProgress && (
-                          <div style={{ marginTop: '16px' }}>
-                            <Text strong>Quiz Score:</Text>
-                            <Text> {courseProgress.quizScores.length > 0 ? courseProgress.quizScores[0].score : 'N/A'}</Text>
-                          </div>
-                        )}
-                      </Card>
-                    </Col>
-                  );
-                })}
-              </Row>
-            ) : (
-              <Card>
-                <Title level={4}>No Enrolled Courses</Title>
-                <Text>You haven't enrolled in any courses yet.</Text>
-                <div style={{ marginTop: '16px' }}>
-                  <Button type="primary" onClick={() => router.push('/courses')}>
-                    Browse Courses
-                  </Button>
-                </div>
-              </Card>
-            )}
-          </div>
+                        Continue
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        className="bg-gradient-to-r from-pink-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-pink-600 hover:to-purple-600 transition"
+                        onClick={() => handleEnroll(course._id)}
+                      >
+                        Join
+                      </Button>
+                    )
+                  }
+                  style={{ minHeight: 220 }}
+                  bodyStyle={{ padding: 20 }}
+                >
+                  <p className="text-gray-700 dark:text-gray-300 mb-4 min-h-[60px] text-base sm:text-sm md:text-base">{course.description}</p>
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Price: <span className="font-bold text-pink-600 dark:text-pink-400">₹{course.price}</span>
+                    </span>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         </main>
       </div>
     </ProtectedRoute>
