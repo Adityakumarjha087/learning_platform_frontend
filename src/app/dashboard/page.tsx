@@ -9,7 +9,7 @@ import axios from 'axios';
 
 const { Title, Text } = Typography;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend-sa8z.onrender.com/';
 
 interface QuizScore {
   chapterId: string;
@@ -65,8 +65,8 @@ const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const [coursesRes, progressRes] = await Promise.all([
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/courses/enrolled`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/progress`),
+          axios.get(`${API_URL}/api/courses/enrolled`),
+          axios.get(`${API_URL}/api/progress`),
         ]);
         setEnrolledCourses((coursesRes.data as { data: Course[] }).data);
         setProgress((progressRes.data as { data: Record<string, UserProgress> }).data);

@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://learning-platform-backend-sa8z.onrender.com/';
 
 interface Course {
   id: string;
