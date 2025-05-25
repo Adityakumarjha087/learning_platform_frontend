@@ -5,34 +5,33 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { useLoadingOperation } from '../../hooks/useLoadingOperation';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
+  const { withLoading } = useLoadingOperation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-
-    try {
-      const user = await login(formData.email, formData.password);
-      if (user && user.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
+    
+    await withLoading(
+      async () => {
+        const user = await login(formData.email, formData.password);
+        if (user && user.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else {
+          router.push('/dashboard');
+        }
+      },
+      'Signing in'
+    );
   };
 
   return (
@@ -95,9 +94,8 @@ export default function LoginPage() {
             <button 
               type="submit" 
               className="btn-primary w-full"
-              disabled={loading}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              Sign In
             </button>
           </form>
 

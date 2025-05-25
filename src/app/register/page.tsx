@@ -120,7 +120,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Admin registration checkbox */}
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -134,7 +133,6 @@ export default function RegisterPage() {
               </label>
             </div>
 
-            {/* Admin token input, only show if checked */}
             {registerAsAdmin && (
               <div className="space-y-2">
                 <label htmlFor="adminToken" className="block text-sm font-medium text-gray-700 dark:text-gray-300">

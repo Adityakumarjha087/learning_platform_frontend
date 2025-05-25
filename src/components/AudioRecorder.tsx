@@ -28,7 +28,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete }) =>
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         onRecordingComplete(audioBlob);
         
-        // Stop all audio tracks
         stream.getTracks().forEach(track => track.stop());
       };
 

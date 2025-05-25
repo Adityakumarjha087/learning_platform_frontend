@@ -195,7 +195,6 @@ const CourseBuilderPage: React.FC = () => {
                   <div style={{ width: '100%' }}>
                     <strong className="text-lg text-blue-700 dark:text-blue-300">{section.title}</strong>
                     <div className="text-gray-500 mb-2">{section.description}</div>
-                    {/* Units List */}
                     <div className="ml-0 sm:ml-4 mb-2">
                       <Title level={5} className="mb-2 text-purple-700 dark:text-purple-300 text-base sm:text-lg">Units</Title>
                       <List
@@ -208,7 +207,6 @@ const CourseBuilderPage: React.FC = () => {
                             <div style={{ width: '100%' }}>
                               <strong className="text-base text-purple-700 dark:text-purple-300">{unit.title}</strong>
                               <div className="text-gray-500 mb-1">{unit.description}</div>
-                              {/* Chapters List */}
                               <div className="ml-0 sm:ml-4 mb-2">
                                 <Title level={5} className="mb-2 text-pink-700 dark:text-pink-300 text-base sm:text-lg">Chapters</Title>
                                 <List
@@ -221,7 +219,6 @@ const CourseBuilderPage: React.FC = () => {
                                       <div style={{ width: '100%' }}>
                                         <strong className="text-pink-700 dark:text-pink-300">{chapter.title}</strong>
                                         <div className="text-gray-500 mb-1">{chapter.content}</div>
-                                        {/* Questions List */}
                                         <div className="ml-0 sm:ml-4 mb-2">
                                           <Title level={5} className="mb-2 text-indigo-700 dark:text-indigo-300 text-base sm:text-lg">Questions</Title>
                                           <List
@@ -247,80 +244,30 @@ const CourseBuilderPage: React.FC = () => {
                                               </List.Item>
                                             )}
                                           />
-                                          {/* Add Question Form */}
-                                          <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                                            <select
-                                              value={questionType[chapter._id] || 'mcq'}
-                                              onChange={e => setQuestionType(prev => ({ ...prev, [chapter._id]: e.target.value }))}
-                                              className="mb-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white"
-                                            >
-                                              <option value="mcq">MCQ</option>
-                                              <option value="fill">Fill in the blank</option>
-                                              <option value="text">Text</option>
-                                              <option value="audio">Audio</option>
-                                            </select>
-                                            <Input
-                                              placeholder="Question Text"
-                                              value={questionText[chapter._id] || ''}
-                                              onChange={e => setQuestionText(prev => ({ ...prev, [chapter._id]: e.target.value }))}
-                                              className="mb-1"
-                                            />
-                                            {questionType[chapter._id] === 'mcq' && (
-                                              <>
-                                                {(questionOptions[chapter._id] || []).map((opt, idx) => (
-                                                  <Input
-                                                    key={idx}
-                                                    placeholder={`Option ${idx + 1}`}
-                                                    value={opt}
-                                                    onChange={e => handleOptionChange(chapter._id, idx, e.target.value)}
-                                                    className="mb-1"
-                                                  />
-                                                ))}
-                                                <Button size="small" icon={<PlusOutlined />} onClick={() => addOption(chapter._id)} className="mb-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 rounded shadow">
-                                                  Add Option
-                                                </Button>
-                                              </>
-                                            )}
-                                            <Input
-                                              placeholder="Correct Answer"
-                                              value={questionCorrect[chapter._id] || ''}
-                                              onChange={e => setQuestionCorrect(prev => ({ ...prev, [chapter._id]: e.target.value }))}
-                                              className="mb-1"
-                                            />
-                                            <Button
-                                              type="primary"
-                                              size="small"
-                                              className="bg-gradient-to-r from-pink-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-pink-600 hover:to-purple-600 transition"
-                                              onClick={() => handleAddQuestion(section._id, unit._id, chapter._id)}
-                                              loading={addingQuestion[chapter._id]}
-                                            >
-                                              Add Question
-                                            </Button>
-                                          </div>
                                         </div>
                                       </div>
                                     </List.Item>
                                   )}
                                 />
-                                {/* Add Chapter Form */}
-                                <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                                <div className="mt-4 p-4 border rounded-lg bg-white dark:bg-gray-800">
+                                  <Title level={5}>Add New Chapter</Title>
                                   <Input
                                     placeholder="Chapter Title"
                                     value={chapterTitle[unit._id] || ''}
-                                    onChange={e => setChapterTitle(prev => ({ ...prev, [unit._id]: e.target.value }))}
-                                    className="mb-1"
+                                    onChange={e => setChapterTitle({ ...chapterTitle, [unit._id]: e.target.value })}
+                                    className="mb-2"
                                   />
                                   <Input.TextArea
                                     placeholder="Chapter Content"
                                     value={chapterContent[unit._id] || ''}
-                                    onChange={e => setChapterContent(prev => ({ ...prev, [unit._id]: e.target.value }))}
-                                    className="mb-1"
+                                    onChange={e => setChapterContent({ ...chapterContent, [unit._id]: e.target.value })}
+                                    className="mb-2"
                                   />
                                   <Button
-                                    type="primary"
-                                    size="small"
-                                    className="bg-gradient-to-r from-blue-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-blue-600 hover:to-purple-600 transition"
+                                    type="dashed"
                                     onClick={() => handleAddChapter(section._id, unit._id)}
+                                    block
+                                    icon={<PlusOutlined />}
                                     loading={addingChapter[unit._id]}
                                   >
                                     Add Chapter
@@ -331,25 +278,25 @@ const CourseBuilderPage: React.FC = () => {
                           </List.Item>
                         )}
                       />
-                      {/* Add Unit Form */}
-                      <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                      <div className="mt-4 p-4 border rounded-lg bg-white dark:bg-gray-800">
+                        <Title level={5}>Add New Unit</Title>
                         <Input
                           placeholder="Unit Title"
                           value={unitTitle[section._id] || ''}
-                          onChange={e => setUnitTitle(prev => ({ ...prev, [section._id]: e.target.value }))}
-                          className="mb-1"
+                          onChange={e => setUnitTitle({ ...unitTitle, [section._id]: e.target.value })}
+                          className="mb-2"
                         />
                         <Input.TextArea
                           placeholder="Unit Description"
                           value={unitDescription[section._id] || ''}
-                          onChange={e => setUnitDescription(prev => ({ ...prev, [section._id]: e.target.value }))}
-                          className="mb-1"
+                          onChange={e => setUnitDescription({ ...unitDescription, [section._id]: e.target.value })}
+                          className="mb-2"
                         />
                         <Button
-                          type="primary"
-                          size="small"
-                          className="bg-gradient-to-r from-pink-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-pink-600 hover:to-purple-600 transition"
+                          type="dashed"
                           onClick={() => handleAddUnit(section._id)}
+                          block
+                          icon={<PlusOutlined />}
                           loading={addingUnit[section._id]}
                         >
                           Add Unit
@@ -360,9 +307,8 @@ const CourseBuilderPage: React.FC = () => {
                 </List.Item>
               )}
             />
-            {/* Add Section Form */}
-            <div className="mt-6 flex flex-col gap-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-              <Title level={5} className="mb-2 text-blue-700 dark:text-blue-300">Add Section</Title>
+            <div className="mt-8 p-4 border rounded-lg bg-white dark:bg-gray-800">
+              <Title level={4}>Add New Section</Title>
               <Input
                 placeholder="Section Title"
                 value={sectionTitle}
@@ -375,7 +321,13 @@ const CourseBuilderPage: React.FC = () => {
                 onChange={e => setSectionDescription(e.target.value)}
                 className="mb-2"
               />
-              <Button type="primary" className="bg-gradient-to-r from-blue-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-blue-600 hover:to-purple-600 transition" onClick={handleAddSection} loading={adding}>
+              <Button
+                type="dashed"
+                onClick={handleAddSection}
+                block
+                icon={<PlusOutlined />}
+                loading={adding}
+              >
                 Add Section
               </Button>
             </div>

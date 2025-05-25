@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { LoadingProvider } from '../context/LoadingContext';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -35,13 +36,15 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          <AuthProvider>
-            <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-              {children}
-            </main>
-          </AuthProvider>
-        </ThemeProvider>
+        <LoadingProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+                {children}
+              </main>
+            </AuthProvider>
+          </ThemeProvider>
+        </LoadingProvider>
       </body>
     </html>
   );

@@ -66,7 +66,7 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
 
   const uploadProps: UploadProps = {
     name: 'file',
-    action: '/api/upload', // You'll need to implement this endpoint
+    action: '/api/upload',
     onChange(info) {
       if (info.file.status === 'done') {
         form.setFieldsValue({

@@ -30,7 +30,6 @@ export default function CreateCourse() {
         title: formData.title,
         description: formData.description,
         thumbnail: formData.thumbnail,
-        // sections: [] // Add this if you want to send empty sections
       };
       const response = await axios.post(`${API_URL}/api/courses`, payload);
       router.push('/dashboard');

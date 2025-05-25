@@ -64,7 +64,6 @@ const LearningInterface: React.FC = () => {
         const chapterId = searchParams.get('chapter');
         const { data } = await axios.get<Course>(`/api/courses/${id}`);
         setCourse(data);
-        // Find the current chapter
         let found = false;
         for (const section of data.sections) {
           for (const unit of section.units) {
@@ -92,7 +91,6 @@ const LearningInterface: React.FC = () => {
     try {
       const values = await form.validateFields();
       const chapterId = searchParams.get('chapter');
-      // Calculate score
       let score = 0;
       let totalPoints = 0;
       currentChapter?.questions.forEach((question) => {
@@ -101,7 +99,6 @@ const LearningInterface: React.FC = () => {
           score += question.points;
         }
       });
-      // Save progress
       await axios.post('/api/progress', {
         courseId: id,
         chapterId,
@@ -117,10 +114,8 @@ const LearningInterface: React.FC = () => {
 
   const handleAudioRecording = async (questionId: string, audioBlob: Blob) => {
     try {
-      // Create a FormData object to send the audio file
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.wav');
-      // Upload the audio file
       const uploadResponse = await axios.post<{ url: string }>(
         '/api/upload/audio',
         formData,
@@ -130,7 +125,6 @@ const LearningInterface: React.FC = () => {
           },
         }
       );
-      // Set the answer in the form
       form.setFieldsValue({
         [questionId]: uploadResponse.data.url,
       });

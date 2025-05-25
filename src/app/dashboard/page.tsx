@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, Progress, Typography, Space, Button, List, Tag, Row, Col, Spin, message } from 'antd';
+import { Card, Progress, Typography, Space, Button, List, Tag, Row, Col, Spin, message, Modal } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -63,6 +63,8 @@ const Dashboard: React.FC = () => {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showEnrollmentConfirm, setShowEnrollmentConfirm] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     fetchCourses();
@@ -70,15 +72,24 @@ const Dashboard: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      // Fetch all courses
-      const allCoursesRes = await axios.get(`${API_URL}/api/courses`);
-      setAllCourses(allCoursesRes.data.data);
+      if (user?.role === 'admin') {
+        const createdCoursesRes = await axios.get<{ success: boolean; data: Course[] }>(`${API_URL}/api/courses/instructor`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setAllCourses(createdCoursesRes.data.data);
+        setEnrolledCourseIds([]);
+      } else {
+        const allCoursesRes = await axios.get<{ success: boolean; data: Course[] }>(`${API_URL}/api/courses`);
+        setAllCourses(allCoursesRes.data.data);
 
-      // Fetch enrolled courses for the current user
-      const enrolledRes = await axios.get(`${API_URL}/api/courses/enrolled`);
-      setEnrolledCourseIds(enrolledRes.data.data.map((c: Course) => c._id));
+        const enrolledRes = await axios.get<{ success: boolean; data: Course[] }>(`${API_URL}/api/courses/enrolled`);
+        setEnrolledCourseIds(enrolledRes.data.data.map((c: Course) => c._id));
+      }
     } catch (error) {
       console.error('Error fetching courses:', error);
+      message.error('Failed to load courses.');
     } finally {
       setLoading(false);
     }
@@ -88,8 +99,7 @@ const Dashboard: React.FC = () => {
     try {
       await axios.post(`${API_URL}/api/courses/${courseId}/enroll`);
       message.success('Enrolled successfully!');
-      // Refetch enrolled courses to update UI
-      const enrolledRes = await axios.get(`${API_URL}/api/courses/enrolled`);
+      const enrolledRes = await axios.get<{ success: boolean; data: Course[] }>(`${API_URL}/api/courses/enrolled`);
       setEnrolledCourseIds(enrolledRes.data.data.map((c: Course) => c._id));
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Error enrolling in course');
@@ -97,12 +107,41 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleJoinClick = (course: Course) => {
+    setSelectedCourse(course);
+    setShowEnrollmentConfirm(true);
+  };
+
+  const handleConfirmEnroll = async () => {
+    if (selectedCourse) {
+      try {
+        await axios.post(`${API_URL}/api/courses/${selectedCourse._id}/enroll`);
+        message.success('Enrolled successfully!');
+        const enrolledRes = await axios.get<{ success: boolean; data: Course[] }>(`${API_URL}/api/courses/enrolled`);
+        setEnrolledCourseIds(enrolledRes.data.data.map((c: Course) => c._id));
+        setShowEnrollmentConfirm(false);
+        setSelectedCourse(null);
+      } catch (error: any) {
+        console.error('Error enrolling:', error);
+        console.error('Backend Error Response:', error.response);
+        message.error(error.response?.data?.message || 'Error enrolling in course');
+      }
+    }
+  };
+
+  const handleCancelEnroll = () => {
+    setShowEnrollmentConfirm(false);
+    setSelectedCourse(null);
+  };
+
   const getChapterProgress = (courseId: string, chapterId: string) => {
+    const progress: any = {};
+
     const courseProgress = progress[courseId];
     if (!courseProgress) return 0;
 
     const quizScore = courseProgress.quizScores.find(
-      (score) => score.chapterId === chapterId
+      (score: any) => score.chapterId === chapterId
     );
 
     if (quizScore) {
@@ -113,15 +152,19 @@ const Dashboard: React.FC = () => {
   };
 
   const getQuizScore = (courseId: string, chapterId: string) => {
+    const progress: any = {};
+
     const courseProgress = progress[courseId];
     if (!courseProgress) return null;
 
     return courseProgress.quizScores.find(
-      (score) => score.chapterId === chapterId
+      (score: any) => score.chapterId === chapterId
     );
   };
 
   const findCurrentChapter = (course: Course, courseId: string) => {
+    const progress: any = {};
+
     const courseProgress = progress[courseId];
     if (!courseProgress) return null;
 
@@ -138,6 +181,8 @@ const Dashboard: React.FC = () => {
   };
 
   const calculateProgress = (courseId: string) => {
+    const progress: any = {};
+
     const courseProgress = progress[courseId];
     if (!courseProgress) return 0;
 
@@ -227,13 +272,15 @@ const Dashboard: React.FC = () => {
                         Continue
                       </Button>
                     ) : (
+                      user?.role === 'learner' && (
                       <Button
                         type="primary"
-                        className="bg-gradient-to-r from-pink-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-pink-600 hover:to-purple-600 transition"
-                        onClick={() => handleEnroll(course._id)}
+                        className="bg-gradient-to-r from-pink-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-pink-600 hover to-purple-600 transition"
+                        onClick={() => handleJoinClick(course)}
                       >
                         Join
                       </Button>
+                      )
                     )
                   }
                   style={{ minHeight: 220 }}
@@ -251,6 +298,36 @@ const Dashboard: React.FC = () => {
           </Row>
         </main>
       </div>
+      {showEnrollmentConfirm && (
+        <Modal
+          visible={showEnrollmentConfirm}
+          onCancel={handleCancelEnroll}
+          title="Confirm Enrollment"
+          footer={[
+            <Button key="back" onClick={handleCancelEnroll}>
+              Cancel
+            </Button>,
+            <Button
+              key="submit"
+              type="primary"
+              onClick={handleConfirmEnroll}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-blue-600 hover:to-purple-600 transition"
+            >
+              {selectedCourse?.price === 0 ? 'Enroll for Free' : `Pay ₹${selectedCourse?.price}`}
+            </Button>,
+          ]}
+        >
+          {selectedCourse && (
+            <div>
+              <Title level={4}>{selectedCourse.title}</Title>
+              <p>Are you sure you want to enroll in this course?</p>
+              {selectedCourse.price > 0 && (
+                <p>Price: ₹{selectedCourse.price}</p>
+              )}
+            </div>
+          )}
+        </Modal>
+      )}
     </ProtectedRoute>
   );
 };
