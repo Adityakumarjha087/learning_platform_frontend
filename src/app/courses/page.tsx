@@ -24,17 +24,23 @@ export default function CoursesPage() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesError, setCoursesError] = useState('');
 
   useEffect(() => {
     fetchCourses();
   }, []);
 
   const fetchCourses = async () => {
+    setCoursesError('');
     try {
       const response = await axios.get<{ data: Course[] }>(`${API_URL}/api/courses`);
       setCourses(response.data.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setCoursesError('We could not load the courses. Please check your connection and try again.');
+    } finally {
+      setCoursesLoading(false);
     }
   };
 
@@ -176,6 +182,33 @@ export default function CoursesPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {coursesLoading && (
+          <p role="status" className="text-gray-500 dark:text-gray-400">
+            Loading courses...
+          </p>
+        )}
+
+        {!coursesLoading && coursesError && courses.length === 0 && (
+          <div role="alert" className="card text-center space-y-4">
+            <p className="text-red-500">{coursesError}</p>
+            <button
+              onClick={() => {
+                setCoursesLoading(true);
+                fetchCourses();
+              }}
+              className="btn-primary"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {!coursesLoading && !coursesError && courses.length === 0 && (
+          <p className="text-gray-500 dark:text-gray-400">
+            No courses are available yet. Please check back soon.
+          </p>
+        )}
 
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
