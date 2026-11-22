@@ -21,17 +21,21 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     
-    await withLoading(
-      async () => {
-        const user = await login(formData.email, formData.password);
-        if (user && user.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else {
-          router.push('/dashboard');
-        }
-      },
-      'Signing in'
-    );
+    try {
+      await withLoading(
+        async () => {
+          const user = await login(formData.email, formData.password);
+          if (user && user.role === 'admin') {
+            router.push('/admin/dashboard');
+          } else {
+            router.push('/dashboard');
+          }
+        },
+        'Signing in'
+      );
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : 'Login failed. Please try again.');
+    }
   };
 
   return (
@@ -63,6 +67,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="input-field"
+                autoComplete="email"
                 required
               />
             </div>
@@ -77,12 +82,14 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="input-field"
+                autoComplete="current-password"
                 required
               />
             </div>
 
             {error && (
               <motion.div
+                role="alert"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-red-500 text-sm text-center p-2 bg-red-50 dark:bg-red-900/20 rounded"
