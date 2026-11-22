@@ -74,6 +74,7 @@ export default function RegisterPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="input-field"
+                autoComplete="name"
                 required
               />
             </div>
@@ -88,6 +89,7 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="input-field"
+                autoComplete="email"
                 required
               />
             </div>
@@ -102,8 +104,14 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="input-field"
+                autoComplete="new-password"
+                minLength={8}
+                aria-describedby="password-hint"
                 required
               />
+              <p id="password-hint" className="text-xs text-gray-500 dark:text-gray-400">
+                Use at least 8 characters.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -116,6 +124,7 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 className="input-field"
+                autoComplete="new-password"
                 required
               />
             </div>
@@ -151,9 +160,10 @@ export default function RegisterPage() {
 
             {error && (
               <motion.div
+                role="alert"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-red-500 text-sm text-center"
+                className="text-red-500 text-sm text-center p-2 bg-red-50 dark:bg-red-900/20 rounded"
               >
                 {error}
               </motion.div>
