@@ -255,6 +255,21 @@ const Dashboard: React.FC = () => {
 
         <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-8 sm:mb-10 text-center drop-shadow">All Courses</h1>
+          {allCourses.length === 0 && (
+            <div
+              role="status"
+              className="max-w-md mx-auto text-center rounded-2xl bg-white/90 dark:bg-gray-900/80 shadow-xl p-8"
+            >
+              <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                No courses yet
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                {user?.role === 'admin'
+                  ? 'Courses you create will show up here.'
+                  : 'New courses will appear here as soon as they are published. Check back soon.'}
+              </p>
+            </div>
+          )}
           <Row gutter={[16, 24]} justify="center">
             {allCourses.map((course) => (
               <Col xs={24} sm={24} md={12} lg={8} key={course._id} className="mb-6">
@@ -275,7 +290,7 @@ const Dashboard: React.FC = () => {
                       user?.role === 'learner' && (
                       <Button
                         type="primary"
-                        className="bg-gradient-to-r from-pink-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-pink-600 hover to-purple-600 transition"
+                        className="bg-gradient-to-r from-pink-500 to-purple-500 border-0 font-semibold rounded-lg shadow hover:from-pink-600 hover:to-purple-600 transition"
                         onClick={() => handleJoinClick(course)}
                       >
                         Join
