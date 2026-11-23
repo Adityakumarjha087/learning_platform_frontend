@@ -222,13 +222,13 @@ const Dashboard: React.FC = () => {
   return (
     <ProtectedRoute allowedRoles={['admin', 'learner']}>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-100 to-pink-50 dark:from-gray-900 dark:to-gray-800">
-        <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-md">
+        <nav aria-label="Main" className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-16 py-4 md:py-0">
               <div className="flex items-center mb-4 md:mb-0">
-                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                <span className="text-2xl font-display font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                   Learning Platform
-                </h1>
+                </span>
               </div>
               <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
                 <span className="text-gray-700 dark:text-gray-300 font-medium">
@@ -315,7 +315,7 @@ const Dashboard: React.FC = () => {
       </div>
       {showEnrollmentConfirm && (
         <Modal
-          visible={showEnrollmentConfirm}
+          open={showEnrollmentConfirm}
           onCancel={handleCancelEnroll}
           title="Confirm Enrollment"
           footer={[
