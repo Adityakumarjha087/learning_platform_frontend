@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
@@ -31,7 +32,7 @@ export default function CreateCourse() {
         description: formData.description,
         thumbnail: formData.thumbnail,
       };
-      const response = await axios.post(`${API_URL}/api/courses`, payload);
+      await axios.post(`${API_URL}/api/courses`, payload);
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create course');
@@ -71,7 +72,7 @@ export default function CreateCourse() {
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Course</h2>
         
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
             <p className="text-red-600">{error}</p>
           </div>
         )}
@@ -150,7 +151,13 @@ export default function CreateCourse() {
             )}
           </div>
 
-          <div>
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
+            <Link
+              href="/dashboard"
+              className="flex justify-center py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Cancel
+            </Link>
             <button
               type="submit"
               disabled={loading}
