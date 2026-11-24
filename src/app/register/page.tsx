@@ -16,6 +16,7 @@ export default function RegisterPage() {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [registerAsAdmin, setRegisterAsAdmin] = useState(false);
   const [adminToken, setAdminToken] = useState('');
   const { register } = useAuth();
@@ -34,6 +35,7 @@ export default function RegisterPage() {
       return;
     }
 
+    setSubmitting(true);
     try {
       if (registerAsAdmin) {
         await register(formData.name, formData.email, formData.password, adminToken);
@@ -41,8 +43,9 @@ export default function RegisterPage() {
         await register(formData.name, formData.email, formData.password);
       }
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : 'Registration failed. Please try again.');
+      setSubmitting(false);
     }
   };
 
@@ -168,8 +171,12 @@ export default function RegisterPage() {
               </motion.div>
             )}
 
-            <button type="submit" className="btn-primary w-full">
-              Create Account
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {submitting ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
