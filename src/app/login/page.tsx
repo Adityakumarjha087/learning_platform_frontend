@@ -17,11 +17,14 @@ export default function LoginPage() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setError('');
-    
+    setSubmitting(true);
+
     try {
       await withLoading(
         async () => {
@@ -36,6 +39,7 @@ export default function LoginPage() {
       );
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : 'Login failed. Please try again.');
+      setSubmitting(false);
     }
   };
 
@@ -98,11 +102,12 @@ export default function LoginPage() {
               </motion.div>
             )}
 
-            <button 
-              type="submit" 
-              className="btn-primary w-full"
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Sign In
+              {submitting ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
