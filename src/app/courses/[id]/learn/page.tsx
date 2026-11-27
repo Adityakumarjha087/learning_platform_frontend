@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, Typography, Space, Button, Form, Radio, Input, message } from 'antd';
+import { Card, Typography, Space, Button, Form, Radio, Input, Result, Spin, message } from 'antd';
 import axios from 'axios';
 import AudioRecorder from '@/components/AudioRecorder';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -56,14 +56,17 @@ const LearningInterface: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [status, setStatus] = useState<'loading' | 'error' | 'not-found'>('loading');
   const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchCourse = async () => {
+      setStatus('loading');
       try {
         const chapterId = searchParams.get('chapter');
         const { data } = await axios.get<Course>(`/api/courses/${id}`);
         setCourse(data);
+        setCurrentChapter(null);
         let found = false;
         for (const section of data.sections) {
           for (const unit of section.units) {
@@ -78,12 +81,16 @@ const LearningInterface: React.FC = () => {
           }
           if (found) break;
         }
+        if (!found) setStatus('not-found');
       } catch (error) {
+        setStatus('error');
         message.error('Failed to load course content');
       }
     };
     if (id) {
       fetchCourse();
+    } else {
+      setStatus('not-found');
     }
   }, [id, searchParams]);
 
@@ -134,7 +141,33 @@ const LearningInterface: React.FC = () => {
   };
 
   if (!course || !currentChapter) {
-    return <div>Loading...</div>;
+    if (status === 'loading') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900" role="status" aria-live="polite">
+          <Spin size="large" tip="Loading chapter...">
+            <div className="p-12" />
+          </Spin>
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+        <Result
+          status={status === 'error' ? 'error' : '404'}
+          title={status === 'error' ? 'Could not load this chapter' : 'Chapter not found'}
+          subTitle={
+            status === 'error'
+              ? 'Something went wrong while loading the course. Please try again.'
+              : 'This chapter does not exist or the link is incomplete.'
+          }
+          extra={
+            <Button type="primary" onClick={() => router.push('/dashboard')}>
+              Back to Dashboard
+            </Button>
+          }
+        />
+      </div>
+    );
   }
 
   return (
