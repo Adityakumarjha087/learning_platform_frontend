@@ -56,6 +56,7 @@ const LearningInterface: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<'loading' | 'error' | 'not-found'>('loading');
   const [form] = Form.useForm();
 
@@ -95,6 +96,7 @@ const LearningInterface: React.FC = () => {
   }, [id, searchParams]);
 
   const handleAnswerSubmit = async () => {
+    if (submitting) return;
     try {
       const values = await form.validateFields();
       const chapterId = searchParams.get('chapter');
@@ -106,6 +108,7 @@ const LearningInterface: React.FC = () => {
           score += question.points;
         }
       });
+      setSubmitting(true);
       await axios.post('/api/progress', {
         courseId: id,
         chapterId,
@@ -115,7 +118,12 @@ const LearningInterface: React.FC = () => {
       message.success('Answers submitted successfully!');
       router.push('/dashboard');
     } catch (error) {
-      message.error('Failed to submit answers');
+      if (typeof error === 'object' && error !== null && 'errorFields' in error) {
+        message.warning('Please answer every question before submitting');
+      } else {
+        message.error('Failed to submit answers');
+      }
+      setSubmitting(false);
     }
   };
 
@@ -261,8 +269,9 @@ const LearningInterface: React.FC = () => {
             htmlType="submit"
             className="w-full py-3 mt-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 border-0 font-semibold shadow hover:from-blue-600 hover:to-purple-600 transition text-base sm:text-lg"
             onClick={handleAnswerSubmit}
+            loading={submitting}
           >
-            Submit Answers
+            {submitting ? 'Submitting...' : 'Submit Answers'}
           </Button>
         </Form>
       </div>
