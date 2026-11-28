@@ -40,6 +40,7 @@ export default function AdminDashboard() {
     price: 0,
   });
   const [addCourseError, setAddCourseError] = useState('');
+  const [isAddingCourse, setIsAddingCourse] = useState(false);
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +69,9 @@ export default function AdminDashboard() {
 
   const handleAddCourse = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAddingCourse) return;
     setAddCourseError('');
+    setIsAddingCourse(true);
     try {
       const token = localStorage.getItem('token');
       await axios.post(
@@ -87,8 +90,10 @@ export default function AdminDashboard() {
     } catch (error: any) {
       setAddCourseError(error.response?.data?.message || 'Error adding course');
       console.error('Error adding course:', error);
+    } finally {
+      setIsAddingCourse(false);
     }
-  }, [newCourse, fetchCourses]);
+  }, [newCourse, fetchCourses, isAddingCourse]);
 
   // While the add-course dialog is open: focus the first field and let Escape close it.
   useEffect(() => {
@@ -214,9 +219,12 @@ export default function AdminDashboard() {
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow hover:from-blue-600 hover:to-purple-600 transition"
+                    <button
+                      type="submit"
+                      disabled={isAddingCourse}
+                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow hover:from-blue-600 hover:to-purple-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Add Course
+                      {isAddingCourse ? 'Adding...' : 'Add Course'}
                     </button>
                   </div>
                 </form>
@@ -231,6 +239,17 @@ export default function AdminDashboard() {
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="animate-pulse bg-gray-200 dark:bg-gray-700 h-48 rounded-2xl"></div>
                 ))}
+              </div>
+            ) : memoizedCourses.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-lg font-medium text-gray-900 dark:text-white">No courses yet</p>
+                <p className="mt-1 text-gray-600 dark:text-gray-400">Create your first course to get started.</p>
+                <button
+                  onClick={() => setShowAddCourse(true)}
+                  className="mt-4 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold shadow hover:from-blue-600 hover:to-purple-600 transition"
+                >
+                  Add New Course
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
