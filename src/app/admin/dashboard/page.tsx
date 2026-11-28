@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import axios from 'axios';
@@ -42,6 +42,7 @@ export default function AdminDashboard() {
   const [addCourseError, setAddCourseError] = useState('');
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const fetchCourses = useCallback(async () => {
     try {
@@ -88,6 +89,17 @@ export default function AdminDashboard() {
       console.error('Error adding course:', error);
     }
   }, [newCourse, fetchCourses]);
+
+  // While the add-course dialog is open: focus the first field and let Escape close it.
+  useEffect(() => {
+    if (!showAddCourse) return;
+    titleInputRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowAddCourse(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [showAddCourse]);
 
   const toggleEnrolledUsers = useCallback((courseId: string) => {
     setExpandedCourse(prev => prev === courseId ? null : courseId);
@@ -139,7 +151,11 @@ export default function AdminDashboard() {
           {/* Add Course Modal */}
           {showAddCourse && (
             <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[2000]">
-              <div className="bg-white dark:bg-gray-900 border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-md relative focus:outline-none focus:ring-2 focus:ring-primary-500">
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="add-course-title"
+                className="bg-white dark:bg-gray-900 border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-md relative focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <button
                   type="button"
                   onClick={() => setShowAddCourse(false)}
@@ -148,11 +164,13 @@ export default function AdminDashboard() {
                 >
                   &times;
                 </button>
-                <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Add New Course</h2>
+                <h2 id="add-course-title" className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Add New Course</h2>
                 <form onSubmit={handleAddCourse} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Title</label>
+                    <label htmlFor="new-course-title" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Title</label>
                     <input
+                      id="new-course-title"
+                      ref={titleInputRef}
                       type="text"
                       value={newCourse.title}
                       onChange={(e) => setNewCourse(prev => ({ ...prev, title: e.target.value }))}
@@ -161,8 +179,9 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Description</label>
+                    <label htmlFor="new-course-description" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Description</label>
                     <textarea
+                      id="new-course-description"
                       value={newCourse.description}
                       onChange={(e) => setNewCourse(prev => ({ ...prev, description: e.target.value }))}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white p-3 focus:ring-2 focus:ring-primary-500 focus:outline-none"
@@ -171,9 +190,11 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Price (₹)</label>
+                    <label htmlFor="new-course-price" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Price (₹)</label>
                     <input
+                      id="new-course-price"
                       type="number"
+                      min={0}
                       value={newCourse.price}
                       onChange={(e) => setNewCourse(prev => ({ ...prev, price: Number(e.target.value) }))}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white p-3 focus:ring-2 focus:ring-primary-500 focus:outline-none"
@@ -181,7 +202,7 @@ export default function AdminDashboard() {
                     />
                   </div>
                   {addCourseError && (
-                    <div className="text-red-400 bg-red-900/30 border border-red-700 rounded p-2 text-center">
+                    <div role="alert" className="text-red-400 bg-red-900/30 border border-red-700 rounded p-2 text-center">
                       {addCourseError}
                     </div>
                   )}
