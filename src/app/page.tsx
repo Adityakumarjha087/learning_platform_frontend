@@ -2,15 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
-import Image from "next/image";
-import styles from "./page.module.css";
-import { useTheme } from "@/context/ThemeContext";
 
 export default function LandingPage() {
-  const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-
   return (
     <div className="min-h-screen">
       <section className="hero-section">
